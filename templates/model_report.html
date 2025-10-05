@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Model Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    	<style>
+		h1{
+      color: #1565c0;
+    }
+		p{
+      color: #1565c0;
+    }
+    	body {
+      background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+
+    }
+
+	</style>
+</head>
+<body class="bg-gray-100 text-gray-900 flex flex-col items-center min-h-screen py-10">
+
+    <h1 class="text-4xl font-bold mb-8">Model Performance Report</h1>
+
+    <!-- Metrics Section -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-3/4">
+        {% for key, value in metrics.items() %}
+        <div class="bg-white shadow-lg rounded-3xl p-6 text-center hover:scale-105 transform transition">
+            <h2 class="text-xl font-semibold capitalize text-gray-700">
+                {{ key.replace("_", " ") }}
+            </h2>
+
+            <p class="text-3xl font-bold mt-2">
+                {% if value is number %}
+                    {{ "%.2f"|format(value) }}
+                {% elif value is none %}
+                    N/A
+                {% else %}
+                    {{ value }}
+                {% endif %}
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Images Section -->
+    <div class="flex flex-wrap justify-center gap-6 mt-10">
+        {% for img in img_paths %}
+        <div class="bg-white shadow-md rounded-xl overflow-hidden hover:shadow-lg transition">
+            <img src="{{ url_for('serve_image', filename=img) }}" 
+                 alt="Dynamic Image" 
+                 class="w-full max-w-md object-cover">
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Navigation Button -->
+    <div class="mt-10">
+        <form action="{{ url_for('list') }}" method="get">
+            <button
+                type="submit"
+                class="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold shadow-md hover:bg-indigo-700 transition duration-300"
+            >
+                View Final Model Report
+            </button>
+        </form>
+    </div>
+
+</body>
+</html>

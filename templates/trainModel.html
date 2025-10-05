@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Model Hyperparameter Adjustments</title>
+  <style>
+    /* --- Estilos generales --- */
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 500px;
+      padding: 30px 40px;
+      animation: fadeIn 0.6s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      text-align: center;
+      color: #1565c0;
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+    }
+
+    p.subtitle {
+      text-align: center;
+      color: #666;
+      font-size: 0.95rem;
+      margin-bottom: 30px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-top: 15px;
+      color: #333;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      margin-top: 5px;
+      transition: border-color 0.2s ease;
+    }
+
+    input:focus, select:focus {
+      border-color: #1565c0;
+      outline: none;
+    }
+
+    small {
+      color: #666;
+      display: block;
+      font-size: 0.8rem;
+      margin-top: 4px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #1565c0;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      margin-top: 25px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.1s ease;
+    }
+
+    button:hover {
+      background: #0d47a1;
+      transform: scale(1.02);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .success-message {
+      background: #c8e6c9;
+      color: #256029;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 15px;
+      text-align: center;
+      display: none;
+    }
+
+    .error-message {
+      background: #ffcdd2;
+      color: #b71c1c;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 15px;
+      text-align: center;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AI Model Settings</h1>
+    <p class="subtitle">Hyperparameters Adjustment</p>
+
+    <form id="trainForm">
+      <label for="dataset">Dataset (CSV optional)</label>
+      <input type="file" id="dataset" name="dataset" accept=".csv">
+      <small>If Empty, will use default</small>
+
+      <label for="batchSize">Batch size</label>
+      <select id="batchSize" name="batchSize" required>
+        <option value="8">8</option>
+        <option value="16">16</option>
+        <option value="32" selected>32</option>
+        <option value="64">64</option>
+      </select>
+      <small>Amount of proccess data before weight adjustments.</small>
+
+      <label for="epochs">Epochs (1–100)</label>
+      <input type="number" id="epochs" name="epochs" min="1" max="100" value="10" required>
+      <small>Iteration count.</small>
+
+      <label for="val_size">Validation Size (0.1-0.5)</label>
+      <input type="number" id="val_size" name="val_size" step="0.05" min="0.1" max="0.5" value="0.2" required>
+      <small>Percentage of validation data.</small>
+
+      <label for="test_size">Test Size (0.1–0.5)</label>
+      <input type="number" id="test_size" name="test_size" step="0.05" min="0.1" max="0.5" value="0.2" required>
+      <small>Percentage of datasets reserved for tests.</small>
+
+      <button type="submit">Send configuration</button>
+
+      <div class="success-message" id="successMessage">Succesfully Send.</div>
+      <div class="error-message" id="errorMessage">Error. Check parameters.</div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById("trainForm");
+    const successMsg = document.getElementById("successMessage");
+    const errorMsg = document.getElementById("errorMessage");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      successMsg.style.display = "none";
+      errorMsg.style.display = "none";
+
+      // Debug: log that the handler was triggered
+      console.log('[trainModel] submit handler invoked');
+
+      // Disable submit button to avoid double submissions
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending...';
+      }
+
+      const file = document.getElementById("dataset").files[0];
+      const formData = new FormData();
+
+      // Safely read form values; some fields may be optional or absent
+      const batchSizeEl = document.getElementById("batchSize");
+      const epochsEl = document.getElementById("epochs");
+      const tunerEl = document.getElementById("tuner");
+      const valSizeEl = document.getElementById("val_size");
+      const testSizeEl = document.getElementById("test_size");
+
+      const data = {
+        batch_size: batchSizeEl ? parseInt(batchSizeEl.value, 10) : null,
+        epochs: epochsEl ? parseInt(epochsEl.value, 10) : null,
+        // tuner is optional in the form; default to null if not present
+        tuner: tunerEl ? (tunerEl.value || null) : null,
+        // validation and test sizes use the IDs present in the form
+        val_size: valSizeEl ? parseFloat(valSizeEl.value) : null,
+        test_size: testSizeEl ? parseFloat(testSizeEl.value) : null
+      };
+
+      formData.append("json_data", JSON.stringify(data));
+      if (file) formData.append("dataset", file);
+
+      try {
+        const response = await fetch("/train", { method: "POST", body: formData });
+        console.log('[trainModel] fetch /train completed, status=', response.status);
+
+        // Si el servidor devuelve un ZIP (archivo), lo descargamos como blob
+        const contentType = response.headers.get('content-type') || '';
+
+        if (response.ok) {
+          if (contentType.includes('application/zip') || response.headers.get('content-disposition')) {
+            const blob = await response.blob();
+
+            // Intentar extraer filename desde Content-Disposition si existe
+            let filename = 'modelo_generado.zip';
+            const cd = response.headers.get('content-disposition');
+            if (cd) {
+              const m = cd.match(/filename\*=UTF-8''([^;]+)|filename="?([^;\"]+)"?/);
+              if (m) filename = decodeURIComponent((m[1] || m[2] || filename).replace(/"/g, ''));
+            }
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+
+            successMsg.textContent = '✅ Archivo generado y descargado: ' + filename;
+            successMsg.style.display = 'block';
+          } else {
+            // Si no es un ZIP, intentar leer como texto/JSON y mostrar mensaje
+            const txt = await response.text();
+            let parsed;
+            try { parsed = JSON.parse(txt); } catch (e) { parsed = null; }
+            if (parsed && parsed.message) {
+              successMsg.textContent = parsed.message;
+            } else {
+              successMsg.textContent = 'Operación completada.';
+            }
+            successMsg.style.display = 'block';
+          }
+        } else {
+          // Respuesta de error: intentar parsear JSON, si no, mostrar texto
+          let errBody;
+          try {
+            errBody = await response.json();
+          } catch (e) {
+            errBody = { error: await response.text() };
+          }
+          throw new Error(errBody.error || errBody.message || 'Error desconocido');
+        }
+      } catch (err) {
+        console.error('[trainModel] submit error', err);
+        errorMsg.textContent = err.message;
+        errorMsg.style.display = "block";
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Enviar configuración';
+        }
+      }
+    });
+  </script>
+</body>
+</html>

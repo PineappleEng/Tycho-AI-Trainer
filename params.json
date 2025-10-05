@@ -1,0 +1,9 @@
+{
+    "batch_size": 32,
+    "epochs": 10,
+    "tuner": null,
+    "val_size": 0.2,
+    "test_size": 0.2,
+    "value_size": 0.2,
+    "dataset": "dataset.csv"
+}

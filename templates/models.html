@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Custom Models | Model Manager</title>
+
+	<!-- TailwindCSS CDN -->
+	<script src="https://cdn.tailwindcss.com"></script>
+
+	<!-- Custom accent color -->
+	<script>
+		tailwind.config = {
+			theme: {
+				extend: {
+					colors: {
+						accent: '#00E5FF',
+						bg: '#0B1120'
+					}
+				}
+			}
+		}
+	</script>
+
+	<style>
+		.fade-in {
+			animation: fadeIn 0.6s ease-in-out;
+		}
+		body {
+      margin: 0;
+      background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+		h1{
+      color: #1565c0;
+    }
+		p{
+      color: #1565c0;
+    }
+		button {
+      background: #1565c0;
+    }
+		@keyframes fadeIn {
+			from { opacity: 0; transform: translateY(10px); }
+			to { opacity: 1; transform: translateY(0); }
+		}
+
+	</style>
+</head>
+<body class="bg-bg text-gray-100 min-h-screen flex flex-col items-center p-6">
+
+	<header class="text-center mb-10">
+		<h1 class="text-4xl font-semibold mb-2">🧠 Custom Models</h1>
+	</header>
+
+	<main class="w-full max-w-2xl space-y-4 fade-in">
+	{% if models %}
+		{% for model in models %}
+			<div 
+				class="border border-blue bg-white rounded-2xl p-4 flex justify-between items-center hover:bg-gray-800/80 transition-all duration-200"
+			>
+				<div>
+					<p class="text-lg font-medium hover:text-white">{{ model }}</p>
+					<p class="text-sm text-gray-400">Created model entry</p>
+				</div>
+
+				<!-- Botón que mantiene la funcionalidad -->
+				<button 
+					onclick="selectModel({{ loop.index0 }})"
+					class="px-3 py-1 bg-indigo-600 text-white rounded-lg transition"
+				>
+					View
+				</button>
+			</div>
+		{% endfor %}
+	{% else %}
+		<p class="text-center text-gray-400 italic">No models found yet.</p>
+	{% endif %}
+	</main>
+
+	<script>
+		async function selectModel(index) {
+			try {
+				// Enviar el índice al backend
+				const response = await fetch("/prueba", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ index })
+				});
+
+				if (!response.ok) throw new Error("Error enviando índice");
+				const data = await response.json();
+
+				console.log("📤 Índice enviado:", data);
+
+				// Redirigir a la página del reporte
+				window.location.href = `/prueba?model_index=${data.index}`;
+			} catch (err) {
+				console.error("❌ Error:", err);
+			}
+		}
+	</script>
+</body>
+</html>

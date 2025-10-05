@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tycho AI Trainer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+    	<style>
+		h1{
+      color: #1565c0;
+    }
+    		h2{
+      color: #1565c0;
+    }
+		p{
+      color: #1565c0;
+    }
+    	body {
+      background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+
+    }
+
+	</style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
+  <h1 class="text-3xl font-bold mb-6">Data Submission</h1>
+
+  <!-- Input Section -->
+  <div class="bg-white shadow-md rounded-lg p-6 w-full max-w-3xl mb-6">
+    <h2 class="text-xl font-semibold mb-4">Input Data</h2>
+
+    <!-- File Upload -->
+    <div class="mb-4">
+      <label class="block mb-2 text-gray-600">Upload CSV:</label>
+      <input type="file" id="csvFile" accept=".csv" 
+             class="block w-full text-gray-700 border border-gray-300 rounded p-2">
+    </div>
+
+    <!-- Submit -->
+    <button id="submitData" 
+            class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-900 disabled:opacity-50"
+            disabled>
+      Submit to Model
+    </button>
+  </div>
+
+  <!-- Output Section -->
+  <div id="outputSection" class="hidden bg-white shadow-lg rounded-2xl p-8 w-full max-w-6xl mt-10 border border-gray-200">
+    <h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3 flex items-center gap-2">
+      <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" 
+          d="M9 17v-2h6v2m-7-4h8M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2h-5l-2-2h-7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+      </svg>
+      Model Output
+    </h2>
+
+    <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+      <table id="outputTable" class="min-w-full text-sm text-left border-collapse">
+        <thead class="bg-gradient-to-r from-blue-600 to-blue-500 text-white">
+          <tr id="outputHeader" class="text-sm uppercase tracking-wider"></tr>
+        </thead>
+        <tbody id="outputBody" class="divide-y divide-gray-200"></tbody>
+      </table>
+    </div>
+
+    <div class="flex justify-end mt-6">
+      <button id="downloadCsv" 
+              class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-medium shadow-md hover:bg-blue-700 transition-all duration-200 ease-in-out">
+        📥 Download CSV
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('csvFile');
+    const submitBtn = document.getElementById('submitData');
+    const outputSection = document.getElementById('outputSection');
+    const outputHeader = document.getElementById('outputHeader');
+    const outputBody = document.getElementById('outputBody');
+    const downloadBtn = document.getElementById('downloadCsv');
+
+    let uploadedFile = null;
+
+    // Enable button only when a file is selected
+    fileInput.addEventListener('change', (e) => {
+      uploadedFile = e.target.files[0];
+      submitBtn.disabled = !uploadedFile;
+    });
+
+    // Submit CSV to Flask backend
+    submitBtn.addEventListener('click', async () => {
+      if (!uploadedFile) {
+        alert("Please upload a CSV file first.");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Processing... ⏳';
+
+      const formData = new FormData();
+      formData.append('file', uploadedFile);
+
+      try {
+        const response = await fetch('/exec', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          alert('Server error: ' + response.statusText + '\n\nDetails: ' + errorText);
+          return;
+        }
+
+        const csvText = await response.text();
+        renderOutput(csvText);
+      } catch (err) {
+        alert('Network or timeout error: ' + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit to Model';
+      }
+    });
+
+    // Render CSV output
+    function renderOutput(csvText) {
+      const [headerLine, ...lines] = csvText.trim().split('\n');
+      const headers = headerLine.split(',');
+
+      outputHeader.innerHTML = headers.map(h => `<th class="px-4 py-2 border">${h}</th>`).join('');
+      outputBody.innerHTML = lines.map(line => {
+        const values = line.split(',');
+        return `<tr>${values.map(v => `<td class="border px-4 py-2">${v}</td>`).join('')}</tr>`;
+      }).join('');
+
+      outputSection.classList.remove('hidden');
+
+      // CSV download
+      const blob = new Blob([csvText], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      downloadBtn.onclick = () => {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'model_output.csv';
+        a.click();
+      };
+    }
+  </script>
+</body>
+</html>
