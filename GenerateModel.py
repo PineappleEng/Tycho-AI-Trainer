@@ -128,7 +128,7 @@ class ExoplanetTabularCNN:
         return os.path.join(model_base_dir, new_folder_name)
 
     def save_model(self, filepath, create_folder=True):
-        model_base_dir = os.path.join('../..', 'Modelos')
+        model_base_dir = os.path.join('./', 'Modelos')
         os.makedirs(model_base_dir, exist_ok=True)
         folder_path = self._get_incremental_folder_name(filepath)
         os.makedirs(folder_path, exist_ok=True)

@@ -76,7 +76,9 @@ def index():
 @app.route("/mrep", methods=["GET"])
 def model_report_page():
     """Muestra el reporte del modelo entrenado."""
-    return render_template("model_report.html", metrics=open("metrics.json"))
+    with open("data/model_report/metrics.json", "r", encoding="utf-8") as f:
+        metrics = json.load(f)
+    return render_template("model_report.html", metrics=metrics)
 
 
 @app.route("/train", methods=["POST"])
