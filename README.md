@@ -12,9 +12,13 @@ git clone https://github.com/PineappleEng/Tycho-AI-Trainer.git
 cd Tycho-AI-Trainer
 ```
 2- Install the required dependencies (Virtual Environment recommended):
-```pip install -r requirements.txt
 ```
-
+pip install -r requirements.txt
+```
+3- Run the Flask application:
+```
+python App.py
+```
 ## Python libraries 
 Flask==3.1.2
 matplotlib==3.10.6
